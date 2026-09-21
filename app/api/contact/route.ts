@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Resend } from "resend";
 
 /**
- * Contact form handler.
+ * Contact form handler. Validates and spam-checks submissions, then emails
+ * them via Resend. Requires:
+ *   RESEND_API_KEY   — from https://resend.com/api-keys (server-side only)
+ *   CONTACT_TO_EMAIL — where submissions should land
  *
- * This validates and spam-checks submissions but does not yet send email —
- * wire it up to an email provider (Resend, Postmark, SES, etc.) or a form
- * backend before relying on it in production. Keep any provider API key
- * server-side only, the same way WEATHER_API_KEY is handled.
+ * Until a custom domain is verified in Resend, the "from" address must stay
+ * as Resend's shared testing domain (onboarding@resend.dev), and delivery
+ * only works to the email address associated with the Resend account.
+ * Once a domain is verified, set CONTACT_FROM_EMAIL to an address on that
+ * domain (e.g. contact@weatheriq.com) to send to any recipient.
  */
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -42,8 +47,40 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // TODO: send the message via your email provider of choice here.
-  // console.log/logging is intentionally omitted to avoid storing PII in logs.
+  const apiKey = process.env.RESEND_API_KEY;
+  const toEmail = process.env.CONTACT_TO_EMAIL;
+  const fromEmail = process.env.CONTACT_FROM_EMAIL ?? "WeatherIQ <onboarding@resend.dev>";
+
+  if (!apiKey || !toEmail) {
+    // Config error — never leak details to the client.
+    return NextResponse.json(
+      { error: "The contact form is temporarily unavailable. Please try again later." },
+      { status: 500 }
+    );
+  }
+
+  try {
+    const resend = new Resend(apiKey);
+    const { error } = await resend.emails.send({
+      from: fromEmail,
+      to: toEmail,
+      replyTo: email,
+      subject: `New WeatherIQ contact form message from ${name}`,
+      text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+    });
+
+    if (error) {
+      return NextResponse.json(
+        { error: "We couldn't send your message right now. Please try again shortly." },
+        { status: 502 }
+      );
+    }
+  } catch {
+    return NextResponse.json(
+      { error: "We couldn't send your message right now. Please try again shortly." },
+      { status: 502 }
+    );
+  }
 
   return NextResponse.json({ ok: true });
 }

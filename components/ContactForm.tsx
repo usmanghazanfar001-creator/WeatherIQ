@@ -10,10 +10,14 @@ export function ContactForm() {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    // Capture the form element now — e.currentTarget is nulled out by the
+    // browser once the event has finished dispatching, which happens well
+    // before this async function reaches its first `await`.
+    const formEl = e.currentTarget;
     setStatus("submitting");
     setErrorMsg(null);
 
-    const form = new FormData(e.currentTarget);
+    const form = new FormData(formEl);
     const payload = Object.fromEntries(form.entries());
 
     try {
@@ -29,7 +33,7 @@ export function ContactForm() {
         return;
       }
       setStatus("success");
-      e.currentTarget.reset();
+      formEl.reset();
     } catch {
       setErrorMsg("Something went wrong. Please try again.");
       setStatus("error");

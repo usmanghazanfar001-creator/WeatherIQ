@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { Header } from "@/components/Header";
@@ -6,6 +7,7 @@ import { Footer } from "@/components/Footer";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://weatheriq.example.com";
+const ADSENSE_CLIENT_ID = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -47,6 +49,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      {ADSENSE_CLIENT_ID && (
+        <head>
+          {/* AdSense site verification / ad-serving script. Only loads
+              when NEXT_PUBLIC_ADSENSE_CLIENT_ID is configured — nothing
+              renders for visitors until AdSense is actually set up. */}
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        </head>
+      )}
       <body className="min-h-screen flex flex-col antialiased">
         <AppProviders>
           <Header />

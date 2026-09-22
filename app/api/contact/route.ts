@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     const { error } = await resend.emails.send({
       from: fromEmail,
       to: toEmail,
-      replyTo: email,
+      reply_to: email,
       subject: `New WeatherIQ contact form message from ${name}`,
       text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
     });

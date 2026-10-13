@@ -60,11 +60,11 @@ database or backend required.
 
 2. **Configure your WeatherAPI.com key**
 
-   An account already exists for the key you provided. It has been placed
-   in `.env.local` (already git-ignored) as:
+   Create a free key at WeatherAPI.com and put it in `.env.local`
+   (already git-ignored):
 
    ```
-   WEATHER_API_KEY=54846b2cfd5b4218850113049262109
+   WEATHER_API_KEY=your_key_here
    ```
 
    `.env.example` is provided as a template with no real key, safe to
